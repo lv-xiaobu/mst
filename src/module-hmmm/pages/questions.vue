@@ -1,6 +1,14 @@
 <template>
   <div class="dashboard-container">
     <el-row>
+      <el-button type="primary" size="mini" @click="$router.push('/questions/new')">
+        {{ $t('question.xinzeng') }}
+      </el-button> 
+      <el-button type="danger" size="mini">
+        {{ $t('question.pidao') }}
+      </el-button> 
+    </el-row>
+    <el-row :gutter="10">
       <el-col :span="6">学 科：
         <el-select placeholder="请选择" v-model="searchForm.subjectID"  style="width:135px" clearable>
           <el-option v-for="item in subjectIDList" :key="item.value" :value="item.value" :label="item.label"></el-option>
@@ -85,10 +93,22 @@
             <!-- .prevent 阻止a标签的默认事件 -->
             <a href="#" @click.prevent="del(stData.row)">删除</a>
             <a href="#">加入精选</a>
-          </template>
-            
+          </template> 
         </el-table-column>
     </el-table>
+
+    <!-- 分页 -->
+    <el-row type='flex' justify='center' style="margin:20px 0">
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="searchForm.page"
+        :page-sizes="[4, 10, 15, 20]"
+        :page-size="searchForm.pagesize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="searchForm.tot">
+      </el-pagination>
+    </el-row>
   </div>
 </template>
 
@@ -122,6 +142,9 @@ export default {
 
       // 定义搜索数据对象
       searchForm: {
+        page: 1, // 默认获取第一页信息
+        pagesize: 4, // 每页显示4条信息
+        tot: 0, // 总的记录条数
         subjectID: '', // 学科
         difficulty: '', // 难度
         questionType: '', // 试题类型
@@ -138,6 +161,16 @@ export default {
     }
   },
   methods: {
+    // ===== 每页条数变化的回调处理
+    handleSizeChange(newsize) {
+      this.searchForm.pagesize = newsize
+      this.getQuestionList()
+    },
+    // ===== 当前页码变化的回调处理
+    handleCurrentChange(newpage) {
+      this.searchForm.page = newpage
+      this.getQuestionList()
+    },
     // ===== 获得 学科 下拉列表的数据
     async getSubjectIDList() {
       var rst = await simple()
@@ -173,6 +206,7 @@ export default {
       var rst = await list(this.searchForm)
       // 把获得好的题库列表信息赋予给 questionList 成员
       this.questionList = rst.data.items
+      this.searchForm.tot = rst.data.counts
     },
     // ===== 题型数字转汉字
     // row：代表一行记录信息  column：代表列的信息  cellValue：当前正要处理的域的信息
