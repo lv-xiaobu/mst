@@ -5,6 +5,12 @@
             ref：用于获取当前的el-form元素
             :model: 是el-form的固定属性，用于获取整个form表单的各项表单域信息
       -->
+      <el-row>
+        <el-col>
+          <el-button type="primary" @click="$router.push('/questions/new')"> {{ $t('question.xinzeng') }}</el-button>
+          <el-button type="danger"> {{ $t('question.pidao') }}</el-button>
+        </el-col>
+      </el-row>
       <el-row :gutter="10">
 
         <el-col :span="6">
@@ -106,6 +112,17 @@
             </template>
         </el-table-column>
       </el-table>
+       <el-row type='flex' justify="center">
+              <el-pagination
+              @size-change="handleSizeChange"
+              @current-change="handleCurrentChange"
+              :current-page="searchForm.page"
+              :page-sizes="[4, 10, 15, 20]"
+              :page-size="searchForm.pagesize"
+              layout="total, sizes, prev, pager, next, jumper"
+              :total="tot"
+            ></el-pagination>
+       </el-row>
     </div>
   </div>
   
@@ -157,7 +174,10 @@ export default {
         shortname: '', // 企业简称
         direction: '', // 方向
         creatorID: '', // 录入人
-        catalogID: '' // 二级目录
+        catalogID: '', // 二级目录
+        tot: 0, // 总条数
+        page: 1, // 默认获取第一页
+        pagesize: 4// 默认每页四条
       }
     }
   },
@@ -175,6 +195,16 @@ export default {
   },
 
   methods: {
+    // 每页条数变化
+    handleSizeChange(val) {
+      this.searchForm.pagesize = val
+      this.getQuestionsList()
+    },
+    // 当前页变化
+    handleCurrentChange(val) {
+      this.searchForm.page = val
+      this.getQuestionsList()
+    },
     // 删除题库
     del(info) {
       // 提示
@@ -220,6 +250,8 @@ export default {
     async getQuestionsList() {
       var rst = await list(this.searchForm)
       this.questionsList = rst.data.items
+      // 分页总条数赋值
+      this.tot = rst.data.counts
     },
     // 题型数字转汉字 三个参数分别代表行信息 列信息 当前域信息
     questionTypeFMT(row, column, cellValue) {
